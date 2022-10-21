@@ -27,10 +27,24 @@ namespace Agenda {
         public string title { get; set; default = ""; }
         public string description { get; set; default = ""; }
         public int position { get; set; default = 0; }
-        public string subinfo { get; set; default = ""; }
-        public int subtasksCount { get; set; default = 0; }
+
+        public Task subtasks { get; set; default = {}; }
 
         public Task () {
+        }
+
+        public int completed_subtasks () {
+            int count = 0;
+
+            foreach(Task task in subtasks)
+                if (task.complete) count++;
+
+            return count;
+        }
+
+        public string subinfo () {
+            if(subtasks.length == 0) return "";
+            return completed_subtasks().to_string() + "/" + subtasksCount().to_string();
         }
 
         public Task.with_attributes (int id, bool complete, string title) {

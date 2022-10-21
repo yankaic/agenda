@@ -23,6 +23,7 @@ namespace Agenda {
     public interface Backend : GLib.Object {
         public abstract Task[] list (Task parent);
         public abstract Task find (int id);
+        public abstract void fetch (Task task);
         public abstract void create (Task task, Task parent);
         public abstract void update (Task task);
         public abstract void drop (Task task, Task parent);

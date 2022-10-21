@@ -316,11 +316,10 @@ namespace Agenda {
             if (openTask.id == SEARCH_TASK.id)
                 tasks = backend.search(search_entry.text);
             else
-                tasks = backend.list (openTask);
-            
-            openTask.subtasksCount = tasks.length;
+                tasks = openTask.subtasks;
 
             foreach (Task task in tasks) {
+                backend.fetch(task)
                 task_list.append_task (task);
             }
 

@@ -88,7 +88,7 @@ namespace Agenda {
                  Columns.TOGGLE, task.complete,
                  Columns.TEXT, task.title,
                  Columns.STRIKETHROUGH, task.complete,
-                 Columns.SUBINFO, task.subinfo,
+                 Columns.SUBINFO, task.subinfo(),
                  Columns.ENTER, "go-next-symbolic",
                  Columns.ID, task.id,
                  Columns.TASK, task,
@@ -283,7 +283,7 @@ namespace Agenda {
                 this.insert_with_values (null, -1,
                      Columns.TOGGLE, task.complete,
                      Columns.TEXT, task.title,
-                     Columns.SUBINFO, task.subinfo,
+                     Columns.SUBINFO, task.subinfo(),
                      Columns.STRIKETHROUGH, task.complete,
                      Columns.ID, task.id,
                      Columns.TASK, task

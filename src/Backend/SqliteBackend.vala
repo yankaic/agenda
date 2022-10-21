@@ -141,9 +141,6 @@ namespace Agenda {
                 task.complete = statement.column_text (3) != null;
                 task.position =  statement.column_int (4);
                 completed = statement.column_int (5);
-                count = statement.column_int (6);
-                task.subinfo = count > 0 ? "(" + completed.to_string() + "/" + count.to_string() + ")": "";
-                task.subtasksCount = count;
                 tasks += task;
             }
             statement.reset ();
@@ -160,12 +157,16 @@ namespace Agenda {
             task.complete = findStatement.column_text (3) != null;
                    
             findStatement.reset ();
+            fetch(task);
             return task;
+        }
+
+        public void fetch(Task task) {
+            task.subtasks = list(task);
         }
 
         public void drop (Task task, Task parent){
             string datetime = new DateTime.now_local ().to_string();
-            parent.subtasksCount--;
             deleteStatement.bind_text (1, datetime);
             deleteStatement.bind_text (2, datetime);
             deleteStatement.bind_int (3, parent.id);
@@ -176,7 +177,6 @@ namespace Agenda {
 
         public void create (Task task, Task parent){
             string datetime = new DateTime.now_local ().to_string();
-            parent.subtasksCount++;
 
             sequenceStatement.step();
             task.id = sequenceStatement.column_int (0);
@@ -193,7 +193,7 @@ namespace Agenda {
 
             insertConnectionStatement.bind_int (1, parent.id);
             insertConnectionStatement.bind_int (2, task.id);
-            insertConnectionStatement.bind_int (3, parent.subtasksCount);
+            insertConnectionStatement.bind_int (3, parent.subtasksCount());
             insertConnectionStatement.bind_text (4, datetime);
             insertConnectionStatement.step ();
             insertConnectionStatement.reset ();
@@ -229,10 +229,8 @@ namespace Agenda {
 
         public void changeParent(Task task, Task old_parent, Task new_parent) {
             string datetime = new DateTime.now_local ().to_string();
-            old_parent.subtasksCount--;
-            new_parent.subtasksCount++;
             moveStatement.bind_int (1, new_parent.id);
-            moveStatement.bind_int (2, new_parent.subtasksCount);
+            moveStatement.bind_int (2, new_parent.subtasksCount());
             moveStatement.bind_text (3, datetime);
             moveStatement.bind_int (4, task.id);
             moveStatement.bind_int (5, old_parent.id);
@@ -241,11 +239,10 @@ namespace Agenda {
         }
 
         public void create_link (Task task, Task new_parent) {
-            new_parent.subtasksCount++;
             string datetime = new DateTime.now_local ().to_string();
             insertConnectionStatement.bind_int (1, new_parent.id);
             insertConnectionStatement.bind_int (2, task.id);
-            insertConnectionStatement.bind_int (3, new_parent.subtasksCount);
+            insertConnectionStatement.bind_int (3, new_parent.subtasksCount());
             insertConnectionStatement.bind_text (4, datetime);
             insertConnectionStatement.step ();
             insertConnectionStatement.reset ();
