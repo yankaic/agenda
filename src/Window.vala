@@ -319,7 +319,7 @@ namespace Agenda {
                 tasks = openTask.subtasks;
 
             foreach (Task task in tasks) {
-                backend.fetch(task)
+                backend.fetch(task);
                 task_list.append_task (task);
             }
 

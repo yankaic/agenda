@@ -132,7 +132,6 @@ namespace Agenda {
 
         private Task[] load_tasks(Sqlite.Statement statement){
             Task[] tasks = {};
-            int completed, count;
             while (statement.step () == Sqlite.ROW) {
                 Task task = new Task ();
                 task.id =  statement.column_int (0);
@@ -140,7 +139,6 @@ namespace Agenda {
                 task.description =  statement.column_text (2);
                 task.complete = statement.column_text (3) != null;
                 task.position =  statement.column_int (4);
-                completed = statement.column_int (5);
                 tasks += task;
             }
             statement.reset ();
@@ -193,7 +191,7 @@ namespace Agenda {
 
             insertConnectionStatement.bind_int (1, parent.id);
             insertConnectionStatement.bind_int (2, task.id);
-            insertConnectionStatement.bind_int (3, parent.subtasksCount());
+            insertConnectionStatement.bind_int (3, parent.subtasks.length);
             insertConnectionStatement.bind_text (4, datetime);
             insertConnectionStatement.step ();
             insertConnectionStatement.reset ();
@@ -230,7 +228,7 @@ namespace Agenda {
         public void changeParent(Task task, Task old_parent, Task new_parent) {
             string datetime = new DateTime.now_local ().to_string();
             moveStatement.bind_int (1, new_parent.id);
-            moveStatement.bind_int (2, new_parent.subtasksCount());
+            moveStatement.bind_int (2, new_parent.subtasks.length);
             moveStatement.bind_text (3, datetime);
             moveStatement.bind_int (4, task.id);
             moveStatement.bind_int (5, old_parent.id);
@@ -242,7 +240,7 @@ namespace Agenda {
             string datetime = new DateTime.now_local ().to_string();
             insertConnectionStatement.bind_int (1, new_parent.id);
             insertConnectionStatement.bind_int (2, task.id);
-            insertConnectionStatement.bind_int (3, new_parent.subtasksCount());
+            insertConnectionStatement.bind_int (3, new_parent.subtasks.length);
             insertConnectionStatement.bind_text (4, datetime);
             insertConnectionStatement.step ();
             insertConnectionStatement.reset ();

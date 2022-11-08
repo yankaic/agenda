@@ -28,7 +28,7 @@ namespace Agenda {
         public string description { get; set; default = ""; }
         public int position { get; set; default = 0; }
 
-        public Task subtasks { get; set; default = {}; }
+        public Task[] subtasks = {};
 
         public Task () {
         }
@@ -44,7 +44,7 @@ namespace Agenda {
 
         public string subinfo () {
             if(subtasks.length == 0) return "";
-            return completed_subtasks().to_string() + "/" + subtasksCount().to_string();
+            return completed_subtasks().to_string() + "/" + subtasks.length.to_string();
         }
 
         public Task.with_attributes (int id, bool complete, string title) {
