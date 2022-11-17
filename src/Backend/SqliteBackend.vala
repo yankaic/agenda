@@ -20,7 +20,7 @@
 ***/
 using Sqlite;
 namespace Agenda {
-    public class SqliteBackend : GLib.Object, Backend {
+    public abstract class SqliteBackend : GLib.Object {
 
         private Sqlite.Database database;
         private Sqlite.Statement insertStatement;
@@ -119,12 +119,12 @@ namespace Agenda {
             database.prepare_v2 (query, query.length, out sequenceStatement);
         }
 
-        public Task[] list (Task parent) {
+        public virtual Task[] list (Task parent) {
             selectStatement.bind_int (1, parent.id);
             return load_tasks(selectStatement);
         }
 
-        public Task[] search(string text){
+        public virtual Task[] search(string text){
             string search = "%" + text + "%";
             searchStatement.bind_text(1, search);
             return load_tasks(searchStatement);
@@ -145,7 +145,7 @@ namespace Agenda {
             return tasks;
         }
 
-        public Task find (int id){
+        public virtual Task find (int id){
             Task task = new Task ();
             findStatement.bind_int (1, id);
             findStatement.step();
@@ -159,11 +159,11 @@ namespace Agenda {
             return task;
         }
 
-        public void fetch(Task task) {
+        public virtual void fetch(Task task) {
             task.subtasks = list(task);
         }
 
-        public void drop (Task task, Task parent){
+        public virtual void drop (Task task, Task parent){
             string datetime = new DateTime.now_local ().to_string();
             deleteStatement.bind_text (1, datetime);
             deleteStatement.bind_text (2, datetime);
@@ -173,7 +173,7 @@ namespace Agenda {
             deleteStatement.reset ();
         }
 
-        public void create (Task task, Task parent){
+        public virtual void create (Task task, Task parent){
             string datetime = new DateTime.now_local ().to_string();
 
             sequenceStatement.step();
@@ -197,7 +197,7 @@ namespace Agenda {
             insertConnectionStatement.reset ();
         }
 
-        public void update(Task task){
+        public virtual void update(Task task){
             string datetime = new DateTime.now_local ().to_string();
             updateStatement.bind_text (1, task.title);
             updateStatement.bind_text (2, datetime);
@@ -206,7 +206,7 @@ namespace Agenda {
             updateStatement.reset ();
         }
 
-        public void mark(Task task){
+        public virtual void mark(Task task){
             string datetime = new DateTime.now_local ().to_string();
             markStatement.bind_text (1, task.complete? datetime: null);
             markStatement.bind_text (2, datetime);
@@ -215,7 +215,7 @@ namespace Agenda {
             markStatement.reset ();
         }
 
-        public void reorder(Task task, Task parent){
+        public virtual void reorder(Task task, Task parent){
             string datetime = new DateTime.now_local ().to_string();
             reorderStatement.bind_int (1, task.position);
             reorderStatement.bind_text (2, datetime);
@@ -225,7 +225,7 @@ namespace Agenda {
             reorderStatement.reset ();
         }
 
-        public void changeParent(Task task, Task old_parent, Task new_parent) {
+        public virtual void changeParent(Task task, Task old_parent, Task new_parent) {
             string datetime = new DateTime.now_local ().to_string();
             moveStatement.bind_int (1, new_parent.id);
             moveStatement.bind_int (2, new_parent.subtasks.length);
@@ -236,7 +236,7 @@ namespace Agenda {
             moveStatement.reset ();
         }
 
-        public void create_link (Task task, Task new_parent) {
+        public virtual void create_link (Task task, Task new_parent) {
             string datetime = new DateTime.now_local ().to_string();
             insertConnectionStatement.bind_int (1, new_parent.id);
             insertConnectionStatement.bind_int (2, task.id);
@@ -246,7 +246,7 @@ namespace Agenda {
             insertConnectionStatement.reset ();
         }
 
-        public Stack readStack () {
+        public virtual Stack readStack () {
             Stack stack = new Stack();
             while (readStackStatement.step () == Sqlite.ROW) {
                 Task task = new Task ();
@@ -257,7 +257,7 @@ namespace Agenda {
             return stack;
         }
         
-        public void writeStack (Stack stack){
+        public virtual void writeStack (Stack stack){
             Stack inverse = new Stack();
             while(!stack.is_empty())
                 inverse.push(stack.pop());
@@ -280,7 +280,7 @@ namespace Agenda {
 
         private bool waiting_one_second = false;
 
-        public void modify_description(Task task) {
+        public virtual void modify_description(Task task) {
             if (!waiting_one_second) {
                 waiting_one_second = true;
                 Timeout.add (1000, () => {

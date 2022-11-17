@@ -68,5 +68,20 @@ namespace Agenda {
 
             return str;
         }
+
+        public void add(Task subtask) {
+            Task[] subtasks = this.subtasks;
+            subtasks += subtask;
+            this.subtasks = subtasks;
+        }
+
+        public void drop(Task subtask){
+            Task[] new_subtasks = {};
+            foreach(Task task in subtasks)
+                if (task != subtask)
+                    new_subtasks += task;
+
+            subtasks = new_subtasks;
+        }
     }
 }

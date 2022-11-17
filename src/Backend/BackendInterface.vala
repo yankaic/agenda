@@ -18,22 +18,114 @@
     along with Agenda.  If not, see <http://www.gnu.org/licenses/>.
 
 ***/
+using Gee;
 
 namespace Agenda {
-    public interface Backend : GLib.Object {
-        public abstract Task[] list (Task parent);
-        public abstract Task find (int id);
-        public abstract void fetch (Task task);
-        public abstract void create (Task task, Task parent);
-        public abstract void update (Task task);
-        public abstract void drop (Task task, Task parent);
-        public abstract void mark (Task task);
-        public abstract void changeParent(Task task, Task old_parent, Task new_parent);
-        public abstract void reorder (Task task, Task parent);
-        public abstract void create_link (Task task, Task new_parent);
-        public abstract Stack readStack ();
-        public abstract void writeStack (Stack stack);
-        public abstract void modify_description(Task task);
-        public abstract Task[] search(string text);
+    public class Backend : SqliteBackend {
+        private HashMap<int, Task> tasks = new HashMap<int, Task>();
+
+        public override Task[] list (Task parent) {
+            Task[] database_subtasks = base.list(parent);
+            Task[] subtasks = {};
+
+            foreach (Task task in database_subtasks) {                    
+                subtasks += get_memory_task(task);
+            }
+            return subtasks;
+		}
+
+        private Task get_memory_task(Task task) {
+            if (!tasks.has_key(task.id))
+                tasks.set(task.id, task);
+            
+            return tasks.get(task.id);
+        }
+
+        public override Task find (int id) {
+            if (tasks.has_key(id))
+                return tasks.get(id);
+            
+            Task task = base.find(id);
+            tasks.set(id, task);
+            return task;
+		}
+
+        public override void fetch (Task task) {
+            Task[] subtasks = list(task);
+
+            if (task.subtasks.length == subtasks.length)
+                return;
+            
+            task.subtasks = subtasks;
+		}
+
+        public override void create (Task task, Task parent) {
+            base.create(task, parent);
+            tasks.set(task.id, task);
+            parent.add(task);
+		}
+
+        public override void drop (Task subtask, Task parent) {
+            base.drop(subtask, parent);
+            parent.drop(subtask);            
+		}
+
+        public override void mark (Task task) {
+            base.mark(task);
+		}
+
+        public override void changeParent(Task task, Task old_parent, Task new_parent) {
+            base.changeParent(task, old_parent, new_parent);
+            old_parent.drop(task);
+            new_parent.add(task);
+		}
+
+        public override void reorder (Task task, Task parent) {
+            base.reorder(task, parent);
+
+            int originalposition = 0;
+            int taskposition = task.position - 1;
+            Task[] subtasks = parent.subtasks;
+            while (subtasks[originalposition] != task)
+                originalposition++;
+            
+            int increment = taskposition > originalposition ? 1 : -1;
+            for (int i = originalposition; i != taskposition; i + increment) {
+                subtasks[i] = subtasks[i + increment];
+            }
+            subtasks[taskposition] = task;
+		}
+
+        public override void create_link (Task task, Task new_parent) {
+            base.create_link(task, new_parent);
+            new_parent.add(task);
+		}
+
+        public override Stack readStack () {
+            Stack dbstack = base.readStack();
+            Stack revert_stack = new Stack();
+            Stack stack = new Stack();
+
+            while(!dbstack.is_empty())
+                revert_stack.push(get_memory_task(dbstack.pop()));
+            
+            while(!revert_stack.is_empty())
+                stack.push(revert_stack.pop());
+            
+            return stack;
+		}
+
+        public override void writeStack (Stack stack) {
+            base.writeStack(stack);
+		}
+
+        public override void modify_description(Task task) {
+            base.modify_description(task);
+		}
+
+        public override Task[] search(string text) {
+            return base.search(text);
+		}
+
     }
 }

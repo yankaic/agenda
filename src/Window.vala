@@ -216,7 +216,7 @@ namespace Agenda {
                 Agenda.settings.set_boolean ("first-time", false);
             }
 
-            backend = new SqliteBackend ();
+            backend = new Backend ();
             stack = backend.readStack();
             load_list ();
             setup_ui ();
